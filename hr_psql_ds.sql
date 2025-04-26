@@ -1,15 +1,15 @@
 -- Создание схемы HR
-CREATE SCHEMA IF NOT EXISTS hr;
-SET search_path TO hr;
+-- CREATE SCHEMA IF NOT EXISTS hr;
+-- SET search_path TO hr;
 
 -- Удаление существующих таблиц (если нужно)
-DROP TABLE IF EXISTS job_history;
-DROP TABLE IF EXISTS employees;
-DROP TABLE IF EXISTS jobs;
-DROP TABLE IF EXISTS departments;
-DROP TABLE IF EXISTS locations;
-DROP TABLE IF EXISTS countries;
-DROP TABLE IF EXISTS regions;
+DROP TABLE IF EXISTS job_history cascade ;
+DROP TABLE IF EXISTS employees cascade ;
+DROP TABLE IF EXISTS jobs cascade ;;
+DROP TABLE IF EXISTS departments cascade ;
+DROP TABLE IF EXISTS locations cascade ;
+DROP TABLE IF EXISTS countries cascade ;
+DROP TABLE IF EXISTS regions cascade ;
 
 -- 1. Таблица регионов
 CREATE TABLE regions (
@@ -79,8 +79,54 @@ CREATE TABLE job_history (
 ALTER TABLE departments 
 ADD CONSTRAINT dept_mgr_fk FOREIGN KEY (manager_id) REFERENCES employees(employee_id);
 
--- Заполнение таблиц данными
+-- Для таблицы countries
+ALTER TABLE countries 
+    ALTER CONSTRAINT countries_region_id_fkey 
+    DEFERRABLE INITIALLY DEFERRED;
 
+-- Для таблицы locations
+ALTER TABLE locations 
+    ALTER CONSTRAINT locations_country_id_fkey 
+    DEFERRABLE INITIALLY DEFERRED;
+
+-- Для таблицы departments
+ALTER TABLE departments 
+    ALTER CONSTRAINT departments_location_id_fkey 
+    DEFERRABLE INITIALLY DEFERRED;
+
+-- Для таблицы employees
+ALTER TABLE employees 
+    ALTER CONSTRAINT employees_job_id_fkey 
+    DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE employees 
+    ALTER CONSTRAINT employees_manager_id_fkey 
+    DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE employees 
+    ALTER CONSTRAINT employees_department_id_fkey 
+    DEFERRABLE INITIALLY DEFERRED;
+
+-- Для таблицы job_history
+ALTER TABLE job_history 
+    ALTER CONSTRAINT job_history_employee_id_fkey 
+    DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE job_history 
+    ALTER CONSTRAINT job_history_job_id_fkey 
+    DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE job_history 
+    ALTER CONSTRAINT job_history_department_id_fkey 
+    DEFERRABLE INITIALLY DEFERRED;
+
+-- Для таблицы departments (внешний ключ на manager_id)
+ALTER TABLE departments 
+    ALTER CONSTRAINT dept_mgr_fk 
+    DEFERRABLE INITIALLY DEFERRED;
+
+-- Заполнение таблиц данными
+BEGIN;
 -- Регионы
 INSERT INTO regions (region_id, region_name) VALUES 
 (1, 'Europe'),
@@ -297,6 +343,88 @@ INSERT INTO employees (employee_id, first_name, last_name, email, phone_number, 
 (198, 'Donald', 'OConnell', 'DOCONNEL', '650.507.9833', '1999-06-21', 'SH_CLERK', 2600, NULL, 124, 50),
 (199, 'Douglas', 'Grant', 'DGRANT', '650.507.9844', '2000-01-13', 'SH_CLERK', 2600, NULL, 124, 50);
 
+INSERT INTO employees (
+    employee_id,
+    first_name,
+    last_name,
+    email,
+    phone_number,
+    hire_date,
+    job_id,
+    salary,
+    commission_pct,
+    manager_id,
+    department_id
+) VALUES (
+    200,
+    'Jennifer',
+    'Whalen',
+    'JWHALEN',
+    '515.123.4444',
+    '1987-09-17',
+    'AD_ASST',
+    4400,
+    NULL,
+    101,
+    10
+);
+-- Сотрудник 200 - Jennifer Whalen (уже был добавлен ранее)
+-- INSERT INTO employees ... (см. предыдущий запрос)
+
+-- Сотрудник 201 - Michael Hartstein
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone_number, 
+    hire_date, job_id, salary, commission_pct, manager_id, department_id
+) VALUES (
+    201, 'Michael', 'Hartstein', 'MHARTSTE', '515.123.5555',
+    '1996-02-17', 'MK_MAN', 13000, NULL, 100, 20
+);
+
+-- Сотрудник 202 - Pat Fay
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone_number, 
+    hire_date, job_id, salary, commission_pct, manager_id, department_id
+) VALUES (
+    202, 'Pat', 'Fay', 'PFAY', '603.123.6666',
+    '1997-08-17', 'MK_REP', 6000, NULL, 201, 20
+);
+
+-- Сотрудник 203 - Susan Mavris
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone_number, 
+    hire_date, job_id, salary, commission_pct, manager_id, department_id
+) VALUES (
+    203, 'Susan', 'Mavris', 'SMAVRIS', '515.123.7777',
+    '1994-06-07', 'HR_REP', 6500, NULL, 101, 40
+);
+
+-- Сотрудник 204 - Hermann Baer
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone_number, 
+    hire_date, job_id, salary, commission_pct, manager_id, department_id
+) VALUES (
+    204, 'Hermann', 'Baer', 'HBAER', '515.123.8888',
+    '1994-06-07', 'PR_REP', 10000, NULL, 101, 70
+);
+
+-- Сотрудник 205 - Shelley Higgins
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone_number, 
+    hire_date, job_id, salary, commission_pct, manager_id, department_id
+) VALUES (
+    205, 'Shelley', 'Higgins', 'SHIGGINS', '515.123.8080',
+    '1994-06-07', 'AC_MGR', 12000, NULL, 101, 110
+);
+
+-- Сотрудник 206 - William Gietz
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone_number, 
+    hire_date, job_id, salary, commission_pct, manager_id, department_id
+) VALUES (
+    206, 'William', 'Gietz', 'WGIETZ', '515.123.8181',
+    '1994-06-07', 'AC_ACCOUNT', 8300, NULL, 205, 110
+);
+
 -- Обновляем manager_id в departments
 UPDATE departments SET manager_id = 200 WHERE department_id = 10;
 UPDATE departments SET manager_id = 201 WHERE department_id = 20;
@@ -323,6 +451,8 @@ INSERT INTO job_history (employee_id, start_date, end_date, job_id, department_i
 (176, '1999-01-01', '1999-12-31', 'SA_MAN', 80),
 (200, '1994-07-01', '1998-12-31', 'AC_ACCOUNT', 90);
 
+
+COMMIT;
 -- Создаем индексы для улучшения производительности
 CREATE INDEX emp_department_ix ON employees(department_id);
 CREATE INDEX emp_job_ix ON employees(job_id);
@@ -334,9 +464,34 @@ CREATE INDEX jhist_department_ix ON job_history(department_id);
 CREATE INDEX jhist_job_ix ON job_history(job_id);
 
 -- Создаем представления
-CREATE VIEW emp_details_view AS
-SELECT 
-    e.employee_id, e.job_id, e.manager_id, e.department_id,
-    d.location_id, l.country_id, e.first_name, e.last_name,
-    e.salary, e.commission_pct, d.department_name, j.job_title,
-    l.city
+CREATE OR REPLACE VIEW emp_details_view AS
+SELECT
+    e.employee_id,
+    e.job_id,
+    e.manager_id,
+    e.department_id,
+    d.location_id,
+    l.country_id,
+    e.first_name,
+    e.last_name,
+    e.salary,
+    e.commission_pct,
+    d.department_name,
+    j.job_title,
+    l.city,
+    l.state_province,
+    l.street_address,
+    l.postal_code,
+    c.country_name,
+    r.region_name,
+    m.first_name AS manager_first_name,
+    m.last_name AS manager_last_name
+FROM
+    employees e
+    LEFT JOIN departments d ON e.department_id = d.department_id
+    LEFT JOIN jobs j ON e.job_id = j.job_id
+    LEFT JOIN locations l ON d.location_id = l.location_id
+    LEFT JOIN countries c ON l.country_id = c.country_id
+    LEFT JOIN regions r ON c.region_id = r.region_id
+    LEFT JOIN employees m ON e.manager_id = m.employee_id;
+
